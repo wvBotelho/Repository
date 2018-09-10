@@ -71,6 +71,30 @@ namespace WVB.Framework.Repository.UnitTest
             }
         }
 
+        private Resource GetNewResource1
+        {
+            get
+            {
+                return new Resource()
+                {
+                    Name = "SQL Server Management Studio 2017",
+                    Contact = GetNewContact
+                };
+            }
+        }
+
+        private Resource GetNewResource2
+        {
+            get
+            {
+                return new Resource()
+                {
+                    Name = "Visual Studio 2017",
+                    Contact = GetNewContact
+                };
+            }
+        }
+
         private Technology GetNewTechnology
         {
             get
@@ -90,31 +114,6 @@ namespace WVB.Framework.Repository.UnitTest
                 {
                     Email = "wagnerbotelho24@gmail.com",
                     Phone = "94550-5151"
-                };
-            }
-        }
-
-        private HashSet<ProjectResource> GetNewProjectResouces
-        {
-            get
-            {
-                return new HashSet<ProjectResource>()
-                {
-                    new ProjectResource()
-                    {
-                        Resource = GetNewResource,
-                        Role = Role.ProjectManager
-                    },
-                    new ProjectResource()
-                    {
-                        Resource = new Resource(){ Name = "Visual Studio 2017", Contact = GetNewContact },
-                        Role = Role.Developer
-                    },
-                    new ProjectResource()
-                    {
-                        Resource = new Resource(){ Name = "SQL Server Management Studio 2017", Contact = GetNewContact },
-                        Role = Role.Developer
-                    }
                 };
             }
         }
@@ -144,7 +143,9 @@ namespace WVB.Framework.Repository.UnitTest
                 Project project = GetNewProject;
                 project.Detail = GetNewDetail;
                 project.Customer = GetNewCustomer;
-                project.ProjectResources = GetNewProjectResouces;
+                project.AddResource(GetNewResource, Role.Developer);
+                project.AddResource(GetNewResource1, Role.Tester);
+                project.AddResource(GetNewResource2, Role.ProjectManager);
 
                 repository.Create(project);
 
@@ -160,6 +161,7 @@ namespace WVB.Framework.Repository.UnitTest
                 Project projetoCompleto = repository.GetList()
                     .Include(p => p.Detail)
                     .Include(p => p.ProjectResources)
+                    .ThenInclude(p => p.Resource)
                     .FirstOrDefault();
 
                 projetoCompleto.End = DateTime.Today.AddMonths(5);
@@ -179,7 +181,7 @@ namespace WVB.Framework.Repository.UnitTest
             {
                 Customer customer = repository.GetList().LastOrDefault();
 
-                customer.Name = "Nome alterado";
+                customer.Name = "Akyra Toriama";
 
                 repository.Update(customer);
 
@@ -194,6 +196,7 @@ namespace WVB.Framework.Repository.UnitTest
             {
                 Project projectDeleted = repository.GetList()
                     .Include(p => p.ProjectResources)
+                    .ThenInclude(p => p.Resource)
                     .LastOrDefault();
 
                 repository.Delete(projectDeleted);
@@ -209,8 +212,7 @@ namespace WVB.Framework.Repository.UnitTest
             {
                  IEnumerable<Project> projects = repository.GetList();
 
-                //Assert.Equal(1, projects.Count());
-                Assert.Single(projects);
+                Assert.Equal(4, projects.Count());
             }
         }
 
@@ -221,7 +223,21 @@ namespace WVB.Framework.Repository.UnitTest
             {
                 IEnumerable<Project> allProjects = repository.GetHistory();
 
-                Assert.Equal(2, allProjects.Count());
+                Assert.Equal(5, allProjects.Count());
+            }
+        }
+
+        [Fact]
+        public void Pode_Retornar_Projetos_Excluidos()
+        {
+            using (IGenericRepository<Project> repository = GetRepository<Project>())
+            {
+                IEnumerable<Project> projetosExcluidos = repository
+                    .Where(p => EF.Property<bool>(p, "deletado"))
+                    .IgnoreQueryFilters()
+                    .ToList();
+
+                Assert.Equal(3, projetosExcluidos.Count());
             }
         }
 
@@ -243,7 +259,7 @@ namespace WVB.Framework.Repository.UnitTest
                         ValoresAdicionados = p.ValoresAdicionados
                     }).ToList();
 
-                Assert.Equal(2, projetosAlterados.Count);
+                Assert.Equal(5, projetosAlterados.Count);
             }
         }
 
@@ -258,7 +274,7 @@ namespace WVB.Framework.Repository.UnitTest
                     .Select(p => new { p.EntidadeID, p.NomeEntidade, p.AlteradoPor, p.DataAlteracao })
                     .ToList();
 
-                Assert.Equal(1, projetosExcluidos.Count());
+                Assert.Equal(3, projetosExcluidos.Count());
             }
         }
 
@@ -278,9 +294,25 @@ namespace WVB.Framework.Repository.UnitTest
         {
             using (IGenericRepository<Project> repository = GetRepository<Project>())
             {
-                Project projetoComDetalhe = repository.GetList().Include(p => p.Detail).LastOrDefault();
+                Project projetoComDetalhe = repository.GetList()
+                    .Include(p => p.Detail)
+                    .LastOrDefault();
 
                 Assert.NotNull(projetoComDetalhe.Detail);
+            }
+        }
+
+        [Fact(DisplayName = "Pode pegar recursos")]
+        public void Pode_Pegar_Recursos()
+        {
+            using (IGenericRepository<Project> repository = GetRepository<Project>())
+            {
+                Project projetoComSeusRecursos = repository.GetList()
+                    .Include(p => p.ProjectResources)
+                    .ThenInclude(p => p.Resource)
+                    .LastOrDefault();
+
+                Assert.Equal(3, projetoComSeusRecursos.ProjectResources.Count);
             }
         }
     }

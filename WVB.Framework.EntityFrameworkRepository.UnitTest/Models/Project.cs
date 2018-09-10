@@ -26,7 +26,15 @@ namespace WVB.Framework.EntityFrameworkRepository.UnitTest.Models
 
         public IEnumerable<ProjectResource> Developers => ProjectResources.Where(d => d.Role == Role.Developer);
 
-        public ProjectResource ProjectManager => ProjectResources.SingleOrDefault(p => p.Role == Role.ProjectManager);
+        public Resource ProjectManager
+        {
+            get
+            {
+                return ProjectResources.Where(p => p.Role == Role.ProjectManager)
+                    .Select(p => p.Resource)
+                    .SingleOrDefault();
+            }
+        }        
 
         #region Propriedades de navegação
 
@@ -38,6 +46,15 @@ namespace WVB.Framework.EntityFrameworkRepository.UnitTest.Models
 
         #endregion
 
+        public void AddResource(Resource resource, Role role)
+        {
+            ProjectResources.Add(new ProjectResource()
+            {
+                Resource = resource,
+                Role = role
+            });
+        }
+
         public override string ToString() => Name;
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -46,7 +63,7 @@ namespace WVB.Framework.EntityFrameworkRepository.UnitTest.Models
                 yield return new ValidationResult("Nenhum gerente de projeto definido.");
 
             if (!Developers.Any())
-                yield return new ValidationResult("Nenhum desenvolvedore definido.");
+                yield return new ValidationResult("Nenhum desenvolvedor definido.");
 
             if (End != null && End <= DateTime.MinValue)
                 yield return new ValidationResult("Data de fechamento do projeto deve ser uma data válida.");

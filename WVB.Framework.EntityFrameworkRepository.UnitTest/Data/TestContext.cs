@@ -8,19 +8,19 @@ namespace WVB.Framework.EntityFrameworkRepository.UnitTest.Data
 {
     public class TestContext : ProjectContext
     {
-        public DbSet<Project> Projects { get; }
+        public DbSet<Project> Projects { get; private set; }
 
-        public DbSet<Customer> Customers { get; }
+        public DbSet<Customer> Customers { get; private set; }
 
-        public DbSet<Resource> Resources { get; }
+        public DbSet<Resource> Resources { get; private set; }
 
-        public DbSet<Technology> Technologies { get; }
+        public DbSet<Technology> Technologies { get; private set; }
 
-        public DbSet<ProjectDetail> ProjectDetails { get; }
+        public DbSet<ProjectDetail> ProjectDetails { get; private set; }
 
-        public DbSet<ProjectResource> ProjectResources { get; }
+        public DbSet<ProjectResource> ProjectResources { get; private set; }
 
-        public DbSet<ContactInformation> ContactInformation { get; }
+        public DbSet<ContactInformation> ContactInformation { get; private set; }
 
         public TestContext(Database database, string connectionString) : base(database, connectionString)
         {

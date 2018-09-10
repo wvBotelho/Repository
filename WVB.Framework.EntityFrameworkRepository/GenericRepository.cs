@@ -172,7 +172,7 @@ namespace WVB.Framework.EntityFrameworkRepository
 
             /// <summary>
             /// Retorna todos os registro de uma tabela historificada (registros normais e os que foram excluidos lógicamente). 
-            /// Para isso a entidade tem que ter o atributo Historificar definido na sua classe, caso contrário, o método retorna nulo
+            /// Para isso a entidade tem que ter o atributo Historificar definido na sua classe, caso contrário, o método retorna a lista inteira
             /// </summary>
             /// <returns>Retorna uma lista com todos os registros</returns>
         public IEnumerable<TEntity> GetHistory()
@@ -181,7 +181,7 @@ namespace WVB.Framework.EntityFrameworkRepository
                 typeof(HistorificarAttribute));
 
             if (historificarAttribute == null)
-                return null;
+                return Entities;
 
             return Where(e => EF.Property<bool>(e, "deletado") || !EF.Property<bool>(e, "deletado")).IgnoreQueryFilters();
         }
